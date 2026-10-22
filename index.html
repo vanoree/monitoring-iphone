@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitoring Bisnis iPhone</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+  :root{
+    --paper:#ECE6D6; --paper-alt:#E2DAC2; --ink:#262117; --ink-soft:#6B6552; --line:#C7BC9C;
+    --stamp-red:#A13A24; --stamp-red-bg:#F3DCD4; --brass:#8C6A24; --brass-bg:#EFE3C2;
+    --forest:#33613F; --forest-bg:#DCE7DA; --white-tag:#FAF7EE;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      repeating-linear-gradient(180deg, rgba(0,0,0,0.015) 0px, rgba(0,0,0,0.015) 1px, transparent 1px, transparent 28px),
+      var(--paper);
+    color:var(--ink); font-family:'Space Mono', monospace; padding:20px 16px 60px; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:820px;margin:0 auto;}
+  .shop-title{font-family:'Oswald',sans-serif; font-weight:600; font-size:15px; letter-spacing:.02em; color:var(--ink-soft); margin:0 0 16px;}
+  .shop-title b{color:var(--ink); font-weight:700;}
+
+  .toolbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:16px;}
+  .hero-row{display:flex; align-items:center; flex-wrap:wrap; gap:18px; margin-bottom:22px;}
+  .hero-tag{
+    position:relative; background:var(--white-tag); border:2px solid var(--ink);
+    padding:20px 30px 20px 46px; transform:rotate(-1.6deg);
+    clip-path:polygon(0% 50%, 12% 0%, 100% 0%, 100% 100%, 12% 100%);
+  }
+  .hero-tag::before{
+    content:""; position:absolute; left:18px; top:50%; transform:translateY(-50%);
+    width:9px;height:9px;border-radius:50%; background:var(--paper); border:2px solid var(--ink);
+  }
+  .hero-label{font-family:'Oswald',sans-serif; font-size:12px; font-weight:600; color:var(--ink-soft); margin:0 0 2px;}
+  .hero-value{font-family:'Oswald',sans-serif; font-size:30px; font-weight:700; margin:0; line-height:1;}
+  .hero-value.neg{color:var(--stamp-red);} .hero-value.pos{color:var(--forest);}
+
+  .stat-strip{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:22px;}
+  .stat-chip{background:var(--paper-alt); border-left:3px solid var(--brass); padding:8px 14px; min-width:130px;}
+  .stat-chip .l{font-size:10.5px; color:var(--ink-soft); font-family:'Oswald',sans-serif; font-weight:500;}
+  .stat-chip .v{font-size:16px; font-weight:700; margin-top:2px;}
+
+  .tabs{display:flex; gap:4px; margin-bottom:16px; border-bottom:2px solid var(--ink); flex-wrap:wrap;}
+  .tab-btn{font-family:'Oswald',sans-serif; font-weight:600; font-size:13px; background:none; border:none; padding:8px 14px; color:var(--ink-soft); cursor:pointer; border-bottom:3px solid transparent; margin-bottom:-2px;}
+  .tab-btn.active{color:var(--ink); border-bottom-color:var(--brass);}
+
+  input, select{font-family:'Space Mono', monospace; background:var(--white-tag); border:1.5px solid var(--ink); padding:9px 10px; font-size:13.5px; color:var(--ink);}
+  input:focus, select:focus{outline:2px solid var(--brass); outline-offset:1px;}
+  #searchUnit, #searchCash{flex:1; min-width:140px;}
+
+  button{font-family:'Oswald',sans-serif; font-weight:600; font-size:13px; letter-spacing:.02em; border:1.5px solid var(--ink); background:var(--ink); color:var(--paper); padding:9px 16px; cursor:pointer;}
+  button.secondary{background:var(--white-tag); color:var(--ink);}
+  button.small{padding:5px 10px; font-size:11.5px;}
+  button.danger{background:var(--stamp-red-bg); color:var(--stamp-red); border-color:var(--stamp-red);}
+  button:hover{opacity:.85;}
+
+  .panel{display:none; background:var(--white-tag); border:1.5px dashed var(--ink-soft); padding:16px; margin-bottom:18px;}
+  .panel.open{display:block;}
+  .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .form-grid label{font-size:11px; font-family:'Oswald',sans-serif; color:var(--ink-soft); display:block; margin-bottom:3px;}
+  .form-grid .full{grid-column:1/-1;}
+  .form-actions{margin-top:12px; display:flex; gap:8px;}
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  thead th{text-align:left; font-family:'Oswald',sans-serif; font-weight:600; font-size:11px; color:var(--ink-soft); border-bottom:2px solid var(--ink); padding:6px 8px;}
+  tbody td{padding:10px 8px; border-bottom:1px solid var(--line); vertical-align:top;}
+  tbody tr:hover{background:rgba(0,0,0,0.02);}
+
+  .badge{display:inline-block; font-family:'Oswald',sans-serif; font-size:11px; font-weight:700; padding:2px 8px; border:1.5px solid;}
+  .badge.stok{color:var(--brass); border-color:var(--brass); background:var(--brass-bg);}
+  .badge.terjual{color:var(--stamp-red); border-color:var(--stamp-red); background:var(--stamp-red-bg); transform:rotate(-3deg); display:inline-block;}
+  .badge.masuk{color:var(--forest); border-color:var(--forest); background:var(--forest-bg);}
+  .badge.keluar{color:var(--stamp-red); border-color:var(--stamp-red); background:var(--stamp-red-bg);}
+
+  .amt-pos{color:var(--forest); font-weight:700;} .amt-neg{color:var(--stamp-red); font-weight:700;}
+  .row-actions{display:flex; gap:6px; flex-wrap:wrap;}
+  .sell-form{display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end; margin-top:8px; padding:10px; background:var(--paper-alt); border:1px dashed var(--ink-soft);}
+  .sell-form div label{font-size:10px; font-family:'Oswald',sans-serif; color:var(--ink-soft); display:block; margin-bottom:3px;}
+
+  .empty{text-align:center; padding:40px 20px; color:var(--ink-soft); font-family:'Oswald',sans-serif; font-size:14px; border:1.5px dashed var(--line);}
+  footer{margin-top:30px; text-align:center; font-size:11px; color:var(--ink-soft);}
+  footer a, footer label{color:var(--ink-soft); cursor:pointer; text-decoration:underline;}
+
+  @media (max-width:560px){
+    .form-grid{grid-template-columns:1fr;}
+    thead{display:none;}
+    table, tbody, tr, td{display:block; width:100%;}
+    tbody tr{border-bottom:2px solid var(--ink); padding:10px 0; margin-bottom:6px;}
+    tbody td{border:none; padding:3px 0;}
+    tbody td::before{content:attr(data-label); display:block; font-family:'Oswald',sans-serif; font-size:10px; color:var(--ink-soft);}
+  }
+</style>
+</head>
+<body>
+<section id="authPanel" class="wrap" style="max-width:460px">
+<h1>Monitoring Bisnis iPhone</h1><p>Login untuk membuka stok dan kas dari semua perangkat.</p>
+<form id="loginForm"><label for="email">Email</label><input id="email" type="email" autocomplete="username" required style="width:100%;margin:8px 0"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required style="width:100%;margin:8px 0"><button id="loginButton">Masuk</button></form><p id="authMessage" role="status" aria-live="polite">Memuat koneksi…</p></section>
+<div id="cloudBar" class="wrap" hidden style="margin-bottom:16px"><span id="cloudStatus" role="status" aria-live="polite"></span><p><button id="syncButton" class="small">Sinkronkan</button> <button id="logoutButton" class="small secondary">Keluar</button></p><div id="conflictPanel" hidden><p>Data online sudah berubah. Salinan lokal tetap disimpan. Download perubahan lokal sebelum mengambil versi online, lalu input ulang perubahan yang diperlukan.</p><button id="conflictBackup">Download perubahan lokal</button> <button id="useCloud" class="secondary">Ambil versi online</button></div></div>
+<div id="appPanel" class="wrap" hidden>
+
+  <p class="shop-title">Buku kas &amp; stok &mdash; <b>Monitoring Bisnis iPhone</b></p>
+
+  <div class="hero-row">
+    <div class="hero-tag">
+      <p class="hero-label">Nett Profit</p>
+      <p class="hero-value" id="heroProfit">Rp 0</p>
+    </div>
+  </div>
+
+  <div class="stat-strip">
+    <div class="stat-chip"><div class="l">Fund in Stock</div><div class="v" id="statModal">Rp 0</div></div>
+    <div class="stat-chip"><div class="l">in Stock</div><div class="v" id="statStok">0</div></div>
+    <div class="stat-chip"><div class="l">Sold</div><div class="v" id="statTerjual">0</div></div>
+    <div class="stat-chip"><div class="l">Revenue</div><div class="v" id="statOmzet">Rp 0</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="unit">Unit iPhone</button>
+    <button class="tab-btn" data-tab="cash">Kas Lain-lain</button>
+    <button class="tab-btn" data-tab="ringkasan">Ringkasan Bulanan</button>
+  </div>
+
+  <!-- TAB: UNIT -->
+  <div id="viewUnit">
+    <div class="toolbar">
+      <button id="toggleAddUnit">+ Add unit</button>
+      <select id="statusFilter">
+        <option value="all">All status</option>
+        <option value="stok">Stock</option>
+        <option value="terjual">Sold</option>
+      </select>
+      <input id="searchUnit" type="text" placeholder="search model...">
+    </div>
+    <div class="panel" id="addUnitPanel">
+      <div class="form-grid">
+        <div class="full">
+          <label>Model iPhone</label>
+          <input id="u_model" type="text" placeholder="ex. iPhone 13 Pro 256GB Graphite">
+        </div>
+        <div>
+          <label>Platform</label>
+          <select id="u_platform">
+            <option value="">-</option>
+            <option>Shopee</option>
+            <option>Tokopedia</option>
+            <option>Facebook</option>
+            <option>Others</option>
+          </select>
+        </div>
+        <div>
+          <label>Harga beli (Rp)</label>
+          <input id="u_beli" type="number" placeholder="3500000">
+        </div>
+        <div>
+          <label>Tanggal beli</label>
+          <input id="u_tglbeli" type="date">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button id="saveUnit">Save</button>
+        <button class="secondary" id="cancelAddUnit">Cancel</button>
+      </div>
+    </div>
+    <div id="unitTableWrap"><p class="empty">Memuat data...</p></div>
+  </div>
+
+  <!-- TAB: CASH -->
+  <div id="viewCash" style="display:none;">
+    <div class="toolbar">
+      <button id="toggleAddCash">+ Tambah kas</button>
+      <input id="searchCash" type="text" placeholder="Cari keterangan...">
+    </div>
+    <div class="panel" id="addCashPanel">
+      <div class="form-grid">
+        <div>
+          <label>Tanggal</label>
+          <input id="c_tanggal" type="date">
+        </div>
+        <div>
+          <label>Kategori</label>
+          <select id="c_kategori">
+            <option value="Biaya operasional">Biaya operasional (keluar)</option>
+            <option value="Lain-lain masuk">Lain-lain (masuk)</option>
+            <option value="Lain-lain keluar">Lain-lain (keluar)</option>
+          </select>
+        </div>
+        <div class="full">
+          <label>Keterangan</label>
+          <input id="c_keterangan" type="text" placeholder="cth. Kuota data, ongkir, dll">
+        </div>
+        <div>
+          <label>Nominal (Rp)</label>
+          <input id="c_nominal" type="number" placeholder="30000">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button id="saveCash">Simpan</button>
+        <button class="secondary" id="cancelAddCash">Batal</button>
+      </div>
+    </div>
+    <div id="cashTableWrap"><p class="empty">Memuat data...</p></div>
+  </div>
+
+  <!-- TAB: RINGKASAN -->
+  <div id="viewRingkasan" style="display:none;">
+    <div id="summaryWrap"></div>
+  </div>
+
+  <footer>
+    <span id="footNote"></span> &middot; <label for="importOldFile">migrasi backup lama</label> &middot; <a id="exportLink">backup data</a> &middot; <label for="importFile">import backup</label> &middot; <a id="resetLink">reset semua data</a>
+    <input type="file" id="importFile" accept=".json" style="display:none;">
+    <input type="file" id="importOldFile" accept=".json" style="display:none;">
+  </footer>
+
+</div>
+
+<script>
+
+let units = [];
+let cash = [];
+let fileHandle = null;
+
+function rupiah(n){ n = Number(n)||0; return 'Rp ' + n.toLocaleString('id-ID'); }
+function todayStr(){ const d=new Date(); return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-'); }
+function monthOf(d){ return (d||todayStr()).slice(0,7); }
+function monthLabel(ym){
+  const [y,m] = ym.split('-');
+  const names = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  return names[Number(m)-1] + ' ' + y;
+}
+function uid(p){ return p + Date.now() + Math.floor(Math.random()*1000); }
+function daysBetween(a,b){
+  const d1 = new Date(a+'T00:00:00'), d2 = new Date(b+'T00:00:00');
+  return Math.round((d2-d1)/(1000*60*60*24));
+}
+function escapeHtml(str){ return String(str).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+function saveData(){
+  document.getElementById('footNote').textContent = units.length + ' unit, ' + cash.length + ' transaksi kas';
+  window.cloudQueue?.();
+}
+window.businessApp = {
+  get: ()=> ({units:cleanUnits(), cash:JSON.parse(JSON.stringify(cash))}),
+  set: data=>{ units=data.units; cash=data.cash; renderAll(); },
+  dates: ()=>{document.getElementById('u_tglbeli').value=todayStr();document.getElementById('c_tanggal').value=todayStr();}
+};
+
+// ---- computations ----
+function unitMargin(u){ return u.sellPrice != null ? (Number(u.sellPrice) - Number(u.buyPrice)) : null; }
+function cashNet(list){ return list.reduce((s,c)=> s + (c.type==='in' ? Number(c.amount) : -Number(c.amount)), 0); }
+
+function computeOverall(){
+  const sold = units.filter(u=>u.sellPrice != null);
+  const stok = units.filter(u=>u.sellPrice == null);
+  const marginTotal = sold.reduce((s,u)=> s + unitMargin(u), 0);
+  const modalStok = stok.reduce((s,u)=> s + Number(u.buyPrice), 0);
+  const omzet = sold.reduce((s,u)=> s + Number(u.sellPrice), 0);
+  const cashTotal = cashNet(cash);
+  return { profit: marginTotal + cashTotal, modalStok, stokCount: stok.length, terjualCount: sold.length, omzet };
+}
+
+function renderHeroStats(){
+  const o = computeOverall();
+  const heroEl = document.getElementById('heroProfit');
+  heroEl.textContent = rupiah(o.profit);
+  heroEl.className = 'hero-value ' + (o.profit>0?'pos':(o.profit<0?'neg':''));
+  document.getElementById('statModal').textContent = rupiah(o.modalStok);
+  document.getElementById('statStok').textContent = o.stokCount;
+  document.getElementById('statTerjual').textContent = o.terjualCount;
+  document.getElementById('statOmzet').textContent = rupiah(o.omzet);
+}
+
+// ---- render: unit tab ----
+function renderUnitTable(){
+  const wrap = document.getElementById('unitTableWrap');
+  const q = document.getElementById('searchUnit').value.trim().toLowerCase();
+  const statusF = document.getElementById('statusFilter').value;
+  let list = units.filter(u=> u.model.toLowerCase().includes(q) || (u.platform||'').toLowerCase().includes(q) );
+  if(statusF==='stok') list = list.filter(u=>u.sellPrice==null);
+  if(statusF==='terjual') list = list.filter(u=>u.sellPrice!=null);
+  list = list.slice().sort((a,b)=> (a.sellPrice==null?0:1)-(b.sellPrice==null?0:1) || (b.buyDate||'').localeCompare(a.buyDate||''));
+
+  if(units.length===0){ wrap.innerHTML = '<p class="empty">Belum ada unit. Klik "+ Tambah unit" buat mulai catat stok iPhone kamu.</p>'; return; }
+  if(list.length===0){ wrap.innerHTML = '<p class="empty">Ga ketemu unit yang cocok.</p>'; return; }
+
+  let html = '<table><thead><tr><th>Model</th><th>Platform</th><th>Buy</th><th>Status</th><th>Action</th><th></th></tr></thead><tbody>';
+  list.forEach(u=>{
+    const sold = u.sellPrice != null;
+    const m = unitMargin(u);
+    html += '<tr>';
+    html += '<td data-label="Model"><b>'+escapeHtml(u.model)+'</b><br><span style="color:var(--ink-soft);font-size:11px;">dibeli '+(u.buyDate||'-')+'</span></td>';
+    html += '<td data-label="Platform">'+escapeHtml(u.platform||'-')+'</td>';
+    html += '<td data-label="Harga beli">'+rupiah(u.buyPrice)+'</td>';
+    if(sold){
+      const holdDays = daysBetween(u.buyDate, u.sellDate);
+      html += '<td data-label="Status"><span class="badge terjual">SOLD</span><span style="font-size:11px;color:var(--ink-soft);"> in <b>'+holdDays+' days</b></span><br><span style="font-size:11px;">'+rupiah(u.sellPrice)+' &middot; <span class="'+(m>=0?'amt-pos':'amt-neg')+'">'+(m>=0?'+':'')+rupiah(m)+'</span></span></td>';
+      html += '<td data-label=""><div class="row-actions"><button class="small danger" data-del="'+u.id+'">Delete</button></div></td>';
+    }else{
+      const ageDays = daysBetween(u.buyDate, todayStr());
+      html += '<td data-label="Status"><span class="badge stok">STOCK</span><span style="font-size:11px;color:var(--ink-soft);"> age <b>'+ageDays+' days</b></span></td>';
+      html += '<td data-label=""><div class="row-actions"><button class="small secondary" data-sell="'+u.id+'">Sold?</button><button class="small danger" data-del="'+u.id+'">Delete</button></div></td>';
+    }
+    html += '</tr>';
+    if(u._selling){
+      html += '<tr><td colspan="6"><div class="sell-form">'+
+        '<div><label>Harga jual (Rp)</label><input type="number" id="sell_price_'+u.id+'" placeholder="4200000"></div>'+
+        '<div><label>Tanggal jual</label><input type="date" id="sell_date_'+u.id+'" value="'+todayStr()+'"></div>'+
+        '<button class="small" data-confirmsell="'+u.id+'">Simpan</button>'+
+        '<button class="small secondary" data-cancelsell="'+u.id+'">Batal</button>'+
+        '</div></td></tr>';
+    }
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+
+  wrap.querySelectorAll('[data-sell]').forEach(btn=> btn.onclick = ()=>{
+    units.forEach(u=>u._selling=false);
+    units.find(u=>u.id===btn.getAttribute('data-sell'))._selling = true;
+    renderUnitTable();
+  });
+  wrap.querySelectorAll('[data-cancelsell]').forEach(btn=> btn.onclick = ()=>{
+    units.find(u=>u.id===btn.getAttribute('data-cancelsell'))._selling = false;
+    renderUnitTable();
+  });
+  wrap.querySelectorAll('[data-confirmsell]').forEach(btn=> btn.onclick = ()=>{
+    const id = btn.getAttribute('data-confirmsell');
+    const priceEl = document.getElementById('sell_price_'+id);
+    const dateEl = document.getElementById('sell_date_'+id);
+    if(!priceEl.value){ priceEl.focus(); return; }
+    const u = units.find(u=>u.id===id);
+    u.sellPrice = Number(priceEl.value); u.sellDate = dateEl.value || todayStr(); u._selling = false;
+    saveData(); renderAll();
+  });
+  wrap.querySelectorAll('[data-del]').forEach(btn=> btn.onclick = ()=>{
+    if(!confirm('Hapus unit ini dari catatan?')) return;
+    units = units.filter(u=>u.id!==btn.getAttribute('data-del'));
+    saveData(); renderAll();
+  });
+}
+
+// ---- render: cash tab ----
+function renderCashTable(){
+  const wrap = document.getElementById('cashTableWrap');
+  const q = document.getElementById('searchCash').value.trim().toLowerCase();
+  let list = cash.filter(c=>c.desc.toLowerCase().includes(q)).slice().sort((a,b)=> b.date.localeCompare(a.date));
+  if(cash.length===0){ wrap.innerHTML = '<p class="empty">Belum ada transaksi kas lain-lain. Klik "+ Tambah kas" buat catat biaya operasional atau kas di luar jual-beli unit.</p>'; return; }
+  if(list.length===0){ wrap.innerHTML = '<p class="empty">Ga ada transaksi yang cocok.</p>'; return; }
+
+  let html = '<table><thead><tr><th>Tanggal</th><th>Keterangan</th><th>Kategori</th><th>Jenis</th><th>Nominal</th><th></th></tr></thead><tbody>';
+  list.forEach(c=>{
+    html += '<tr>';
+    html += '<td data-label="Tanggal">'+c.date+'</td>';
+    html += '<td data-label="Keterangan">'+escapeHtml(c.desc)+'</td>';
+    html += '<td data-label="Kategori">'+escapeHtml(c.category)+'</td>';
+    html += '<td data-label="Jenis"><span class="badge '+(c.type==='in'?'masuk':'keluar')+'">'+(c.type==='in'?'MASUK':'KELUAR')+'</span></td>';
+    html += '<td data-label="Nominal"><span class="'+(c.type==='in'?'amt-pos':'amt-neg')+'">'+(c.type==='in'?'+':'-')+rupiah(c.amount)+'</span></td>';
+    html += '<td data-label=""><button class="small danger" data-delc="'+c.id+'">Hapus</button></td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+  wrap.querySelectorAll('[data-delc]').forEach(btn=> btn.onclick = ()=>{
+    if(!confirm('Hapus transaksi ini?')) return;
+    cash = cash.filter(c=>c.id!==btn.getAttribute('data-delc'));
+    saveData(); renderAll();
+  });
+}
+
+// ---- render: monthly summary (matched at sale date) ----
+function renderSummary(){
+  const wrap = document.getElementById('summaryWrap');
+  const soldMonths = new Set(units.filter(u=>u.sellDate).map(u=>monthOf(u.sellDate)));
+  const cashMonths = new Set(cash.map(c=>monthOf(c.date)));
+  const purchaseMonths = new Set(units.map(u=>monthOf(u.buyDate)));
+  const months = Array.from(new Set([...soldMonths, ...cashMonths, ...purchaseMonths])).sort();
+
+  if(months.length===0){ wrap.innerHTML = '<p class="empty">Belum ada data buat diringkas per bulan.</p>'; return; }
+
+  let html = '<table><thead><tr><th>Bulan</th><th>Unit terjual</th><th>Omzet</th><th>Margin unit</th><th>Modal dibeli</th><th>Kas lain2 (net)</th><th>Laba bersih</th></tr></thead><tbody>';
+  months.slice().reverse().forEach(ym=>{
+    const soldThisMonth = units.filter(u=>u.sellDate && monthOf(u.sellDate)===ym);
+    const boughtThisMonth = units.filter(u=>monthOf(u.buyDate)===ym);
+    const cashThisMonth = cash.filter(c=>monthOf(c.date)===ym);
+    const omzet = soldThisMonth.reduce((s,u)=>s+Number(u.sellPrice),0);
+    const margin = soldThisMonth.reduce((s,u)=>s+unitMargin(u),0);
+    const modalDibeli = boughtThisMonth.reduce((s,u)=>s+Number(u.buyPrice),0);
+    const net = cashNet(cashThisMonth);
+    const laba = margin + net;
+    html += '<tr>';
+    html += '<td data-label="Bulan"><b>'+monthLabel(ym)+'</b></td>';
+    html += '<td data-label="Unit terjual">'+soldThisMonth.length+'</td>';
+    html += '<td data-label="Omzet">'+rupiah(omzet)+'</td>';
+    html += '<td data-label="Margin unit" class="'+(margin>=0?'amt-pos':'amt-neg')+'">'+(margin>=0?'+':'')+rupiah(margin)+'</td>';
+    html += '<td data-label="Modal dibeli" style="color:var(--ink-soft);">'+rupiah(modalDibeli)+'</td>';
+    html += '<td data-label="Kas lain2" class="'+(net>=0?'amt-pos':'amt-neg')+'">'+(net>=0?'+':'')+rupiah(net)+'</td>';
+    html += '<td data-label="Laba bersih"><span class="'+(laba>=0?'amt-pos':'amt-neg')+'">'+(laba>=0?'+':'')+rupiah(laba)+'</span></td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  html += '<p style="font-size:11px; color:var(--ink-soft); margin-top:10px;">Laba bersih dihitung dari margin unit pas TERJUAL (bukan pas dibeli), jadi ga keganggu sama modal yang lagi nyangkut di stok. Kolom "Modal dibeli" cuma informasi cash keluar buat beli unit bulan itu.</p>';
+  wrap.innerHTML = html;
+}
+
+function renderAll(){
+  renderHeroStats();
+  renderUnitTable();
+  renderCashTable();
+  renderSummary();
+  document.getElementById('footNote').textContent = units.length + ' unit, ' + cash.length + ' transaksi kas';
+}
+
+// ---- tabs ----
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.onclick = ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('viewUnit').style.display = btn.dataset.tab==='unit' ? 'block':'none';
+    document.getElementById('viewCash').style.display = btn.dataset.tab==='cash' ? 'block':'none';
+    document.getElementById('viewRingkasan').style.display = btn.dataset.tab==='ringkasan' ? 'block':'none';
+  };
+});
+
+// ---- unit form ----
+document.getElementById('toggleAddUnit').onclick = ()=> document.getElementById('addUnitPanel').classList.toggle('open');
+document.getElementById('cancelAddUnit').onclick = ()=> document.getElementById('addUnitPanel').classList.remove('open');
+document.getElementById('saveUnit').onclick = ()=>{
+  const model = document.getElementById('u_model').value.trim();
+  const platform = document.getElementById('u_platform').value;
+  const beli = document.getElementById('u_beli').value;
+  const tglbeli = document.getElementById('u_tglbeli').value || todayStr();
+  if(!model || !beli){ alert('Isi model sama harga beli dulu ya.'); return; }
+  units.push({id: uid('u'), model, platform, buyPrice: Number(beli), buyDate: tglbeli, sellPrice: null, sellDate: null});
+  document.getElementById('u_model').value=''; document.getElementById('u_beli').value='';
+  document.getElementById('addUnitPanel').classList.remove('open');
+  saveData(); renderAll();
+};
+document.getElementById('searchUnit').oninput = renderUnitTable;
+document.getElementById('statusFilter').onchange = renderUnitTable;
+
+// ---- cash form ----
+document.getElementById('toggleAddCash').onclick = ()=> document.getElementById('addCashPanel').classList.toggle('open');
+document.getElementById('cancelAddCash').onclick = ()=> document.getElementById('addCashPanel').classList.remove('open');
+document.getElementById('saveCash').onclick = ()=>{
+  const date = document.getElementById('c_tanggal').value || todayStr();
+  const katRaw = document.getElementById('c_kategori').value;
+  const desc = document.getElementById('c_keterangan').value.trim();
+  const nominal = document.getElementById('c_nominal').value;
+  if(!desc || !nominal){ alert('Isi keterangan sama nominal dulu ya.'); return; }
+  let category = katRaw, type = 'out';
+  if(katRaw === 'Biaya operasional'){ type='out'; category='Biaya operasional'; }
+  else if(katRaw === 'Lain-lain masuk'){ type='in'; category='Lain-lain'; }
+  else if(katRaw === 'Lain-lain keluar'){ type='out'; category='Lain-lain'; }
+  cash.push({id: uid('c'), date, category, desc, amount: Number(nominal), type});
+  document.getElementById('c_keterangan').value=''; document.getElementById('c_nominal').value='';
+  document.getElementById('addCashPanel').classList.remove('open');
+  saveData(); renderAll();
+};
+document.getElementById('searchCash').oninput = renderCashTable;
+
+// ---- backup / import / migrate / reset ----
+function cleanUnits(){
+  return units.map(u=>({id:u.id, model:u.model, platform:u.platform||'', buyPrice:u.buyPrice, buyDate:u.buyDate, sellPrice:u.sellPrice, sellDate:u.sellDate}));
+}
+function exportData(){
+  const blob = new Blob([JSON.stringify({units: cleanUnits(), cash}, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'backup-bisnis-iphone-' + todayStr() + '.json';
+  a.click(); URL.revokeObjectURL(url);
+}
+function importData(file){
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const parsed = window.validateBusinessData(JSON.parse(e.target.result));
+      if(!confirm('Import akan mengganti seluruh data akun ini. Lanjutkan?')) return;
+      units = parsed.units; cash = parsed.cash;
+      saveData(); renderAll();
+      alert('Data berhasil di-import.');
+    }catch(err){ alert('File backup ga valid.'); }
+  };
+  reader.onerror = ()=> alert('Gagal baca file dari komputer lo.');
+  reader.readAsText(file);
+}
+
+const MARKET_WORDS = ['shopee','tokopedia','lazada','blibli','olx','facebook','instagram','wa','whatsapp'];
+function modelKey(desc){
+  return desc.toLowerCase().split(/[^a-z0-9]+/).filter(w=>w && !MARKET_WORDS.includes(w)).join(' ');
+}
+function migrateOldFormat(file){
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const old = JSON.parse(e.target.result);
+      if(!Array.isArray(old)) throw new Error('format salah');
+      const purchases = old.filter(t=>t.category==='Pembelian / Modal');
+      const sales = old.filter(t=>t.category==='Penjualan iPhone');
+      const other = old.filter(t=>t.category!=='Pembelian / Modal' && t.category!=='Penjualan iPhone');
+
+      const pg = {}, sg = {};
+      purchases.forEach(p=>{ const k=modelKey(p.desc); (pg[k]=pg[k]||[]).push(p); });
+      sales.forEach(s=>{ const k=modelKey(s.desc); (sg[k]=sg[k]||[]).push(s); });
+      Object.values(pg).forEach(l=>l.sort((a,b)=>a.date.localeCompare(b.date)));
+      Object.values(sg).forEach(l=>l.sort((a,b)=>a.date.localeCompare(b.date)));
+
+      const newUnits = []; const newCash = []; let unmatchedSales = [];
+      Object.keys(pg).forEach(k=>{
+        const plist = pg[k], slist = sg[k]||[];
+        const n = Math.min(plist.length, slist.length);
+        for(let i=0;i<n;i++){
+          const p=plist[i], s=slist[i];
+          newUnits.push({id:'u'+p.id, model:p.desc, platform:'', buyPrice:p.amount, buyDate:p.date, sellPrice:s.amount, sellDate:s.date});
+        }
+        for(let i=n;i<plist.length;i++){
+          const p=plist[i];
+          newUnits.push({id:'u'+p.id, model:p.desc, platform:'', buyPrice:p.amount, buyDate:p.date, sellPrice:null, sellDate:null});
+        }
+        for(let i=n;i<slist.length;i++) unmatchedSales.push(slist[i]);
+      });
+      Object.keys(sg).forEach(k=>{ if(!pg[k]) unmatchedSales = unmatchedSales.concat(sg[k]); });
+      other.forEach(o=> newCash.push({id:'c'+o.id, date:o.date, desc:o.desc, category:o.category, amount:o.amount, type:o.type}));
+      unmatchedSales.forEach(s=> newCash.push({id:'c'+s.id, date:s.date, desc:s.desc+' (jual tanpa pasangan beli - cek manual)', category:'Lain-lain', amount:s.amount, type:'in'}));
+
+      const validated = window.validateBusinessData({units:units.concat(newUnits),cash:cash.concat(newCash)});
+      units=validated.units; cash=validated.cash;
+      saveData(); renderAll();
+      alert('Migrasi selesai: '+newUnits.length+' unit dipasangin/masuk stok, '+newCash.length+' transaksi kas dipindah. Cek tab Unit iPhone buat verifikasi pairing-nya.');
+    }catch(err){ alert('File backup lama ga kebaca / formatnya beda.'); }
+  };
+  reader.onerror = ()=> alert('Gagal baca file dari komputer lo.');
+  reader.readAsText(file);
+}
+
+document.getElementById('exportLink').onclick = exportData;
+document.getElementById('importFile').onchange = (e)=>{ if(e.target.files[0]) importData(e.target.files[0]); e.target.value=''; };
+document.getElementById('importOldFile').onchange = (e)=>{ if(e.target.files[0]) migrateOldFormat(e.target.files[0]); e.target.value=''; };
+document.getElementById('resetLink').onclick = ()=>{
+  if(!confirm('Yakin mau hapus SEMUA data (unit & kas)? Ga bisa dibalikin.')) return;
+  units=[]; cash=[]; saveData(); renderAll();
+};
+
+window.businessApp.dates();
+</script>
+<script src="config.js"></script>
+<script type="module" src="cloud.js"></script>
+</body>
+</html>
